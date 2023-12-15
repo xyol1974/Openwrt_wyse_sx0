@@ -1,0 +1,48 @@
+--- a/drivers/ata/pata_cs5536.c	2023-02-25 18:13:30.000000000 +0800
++++ b/drivers/ata/pata_cs5536.c	2021-05-27 00:06:05.394229000 +0800
+@@ -29,7 +29,7 @@
+ 
+ #ifdef CONFIG_X86_32
+ #include <asm/msr.h>
+-static int use_msr;
++static int use_msr = 1;
+ module_param_named(msr, use_msr, int, 0644);
+ MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
+ #else
+@@ -68,6 +68,13 @@
+ 	IDE_ETC_UDMA_MASK	= 0xc0,
+ };
+ 
++static void cs5536_isa_mmio_always_on(struct pci_dev *dev)
++{
++	dev->mmio_always_on = 1;
++}
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA,
++	PCI_CLASS_BRIDGE_ISA, 8, cs5536_isa_mmio_always_on);
++
+ /* Some Bachmann OT200 devices have a non working UDMA support due a
+  * missing resistor.
+  */
+@@ -263,12 +270,19 @@
+ 	ppi[1] = &ata_dummy_port_info;
+ 
+ 	if (use_msr)
+-		printk(KERN_ERR DRV_NAME ": Using MSR regs instead of PCI\n");
+-
++	{
++		printk(KERN_ERR DRV_NAME ": Using MSR regs instead of PCI\n");
++		cs5536_write(dev, CFG, 0x00010002 );
++		cs5536_write(dev, DTC, 0x20200000 );
++		cs5536_write(dev, CAST, 0x20000000 );
++		cs5536_write(dev, ETC, 0x00000000 );
++	}
+ 	cs5536_read(dev, CFG, &cfg);
++	cfg |= IDE_CFG_CHANEN;
++	cs5536_write(dev, CFG, cfg);
+ 
+ 	if ((cfg & IDE_CFG_CHANEN) == 0) {
+-		printk(KERN_ERR DRV_NAME ": disabled by BIOS\n");
++		printk(KERN_ERR DRV_NAME ": disabled by BIOS\n");
+ 		return -ENODEV;
+ 	}
+ 
