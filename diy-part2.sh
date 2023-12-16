@@ -12,4 +12,4 @@
 
 # Modify default IP
 #sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
-cp ../102-pata_cs5536.patch target/linux/x86/patches-*/
+cp ../102-pata_cs5536.patch target/linux/x86/patches-6.1/
