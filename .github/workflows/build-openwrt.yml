@@ -63,8 +63,6 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        cp $CS5536PATCH openwrt/target/linux/x86/patches-5*/
-        mv $CS5536PATCH openwrt/target/linux/x86/patches-6*/
 
     - name: Load custom feeds
       run: |
